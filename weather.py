@@ -117,8 +117,16 @@ def draw_weather(weather_condition):
     print("Unknown weather condition")
 
 def wind_direction(deg):
-    directions = ["↓", "↙", "←", "↖", "↑", "↗", "→", "↘"]
-    return directions[round(deg % 360 / 45) % 8]
+    """Convert wind direction in degrees to a compass direction."""
+    if deg is None:
+        return "?"
+    
+    directions = [
+        "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+        "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"
+    ]
+    index = round(deg / 22.5) % 16
+    return directions[index]
 
 def display_weather_data(weather_data):
     print(f"Weather for {weather_data['nearest_area'][0]['areaName'][0]['value']}")
@@ -129,29 +137,30 @@ def display_weather_data(weather_data):
     
     print("\nCurrent weather:")
     print("┌───────────────────────────────┐")
-    for i in range(5):
-        print(f"│ {icon[i]} │")
+    for line in icon:
+        print(f"│ {line:<29} │")
     print("├───────────────────────────────┤")
     print(f"│ Temperature: {color_temp(float(current['temp_C']))}°C ({color_temp(float(current['temp_F']))}°F) │")
     print(f"│ Wind: {wind_direction(int(current['winddirDegree']))} {color_temp(float(current['windspeedKmph']))} km/h │")
-    print(f"│ Humidity: {current['humidity']}%                │")
-    print(f"│ Visibility: {current['visibility']} km           │")
+    print(f"│ Humidity: {current['humidity']}%                 │")
+    print(f"│ Visibility: {current['visibility']} km            │")
     print("└───────────────────────────────┘")
 
     print("\nForecast:")
     for day in weather_data['weather']:
         print(f"\n{day['date']}:")
-        print("┌─────────────┬──────────┬──────────┬──────────┐")
-        print("│   Time      │ Temp     │  Wind    │  Rain    │")
-        print("├─────────────┼──────────┼──────────┼──────────┤")
+        print("┌─────────────┬──────────────────────┬──────────┬──────────┐")
+        print("│   Time      │ Temp                 │  Wind    │  Rain    │")
+        print("├─────────────┼──────────────────────┼──────────┼──────────┤")
         for hour in day['hourly']:
             time = f"{int(hour['time'])//100:02d}:00"
-            temp = color_temp(float(hour['tempC']))
+            temp_c = float(hour['tempC'])
+            temp_f = (temp_c * 9/5) + 32  # Convert Celsius to Fahrenheit
+            temp = f"{color_temp(temp_c)}°C/{color_temp(temp_f)}°F"
             wind = f"{wind_direction(int(hour['winddirDegree']))} {hour['windspeedKmph']}"
             rain = hour['precipMM']
-            print(f"│ {time:11} │ {temp:8}°C │ {wind:8} │ {rain:7}mm │")
-        print("└─────────────┴──────────┴──────────┴──────────┘")
-
+            print(f"│ {time:11} │ {temp:<20} │ {wind:<8} │ {rain:7}mm │")
+        print("└─────────────┴──────────────────────┴──────────┴──────────┘")
 
 def main():
     ip_address = get_ip_address()
