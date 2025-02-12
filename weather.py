@@ -1,4 +1,13 @@
 import requests
+import sys
+import os
+
+# Force UTF-8 encoding for stdout
+sys.stdout.reconfigure(encoding='utf-8')
+
+# Enable ANSI escape sequence processing on Windows
+if os.name == 'nt':
+    os.system('color')
 
 def get_ip_address():
     """Gets the IP address of the machine."""
@@ -35,70 +44,70 @@ def get_weather(location):
         return None
 
 weather_icons = {
-    "sunny": """
-      \   /     
-       .-.      
-    ― (   ) ―   
-       `-’      
-      /   \     
-""",
-    "clear": """
-      \   /     
-       .-.      
-    ― (   ) ―   
-       `-’      
-      /   \     
-""",
-    "cloudy": """
-      \  /       
-    _ /"".-.     
-      \_(   ).   
-      /(___(__)  
-
-""",
-    "overcast": """
-
-        .--.     
-     .-(    ).   
-    (___.__)__)  
-
-""",
-    "mist": """
-    
-   _ - _ - _ -  
-    _ - _ - _   
-   _ - _ - _ -  
-    
-""",
-    "fog": """
-    
-   _ - _ - _ -  
-    _ - _ - _   
-   _ - _ - _ -  
-    
-""",
-    "rain": """
-      .-.      
-     (   ).    
-    (___(__)   
-     ‘ ‘ ‘ ‘   
-    ‘ ‘ ‘ ‘    
-""",
-    "thunderstorm": """
-    _`/"".-.     
-     ,\_(   ).   
-      /(___(__)  
-      ‚‘‚‘‚‘‚‘   
-      ‚’‚’‚’‚’   
-""",
-    "storm": """
-    _`/"".-.     
-     ,\_(   ).   
-      /(___(__)  
-      ‚‘‚‘‚‘‚‘   
-      ‚’‚’‚’‚’   
-"""
+    "sunny": [
+        "\033[38;5;226m    \\   /     \033[0m",
+        "\033[38;5;226m     .-.      \033[0m",
+        "\033[38;5;226m  ― (   ) ―   \033[0m",
+        "\033[38;5;226m     `-᾿      \033[0m",
+        "\033[38;5;226m    /   \\     \033[0m"
+    ],
+    "cloudy": [
+        "             ",
+        "\033[38;5;250m     .--.     \033[0m",
+        "\033[38;5;250m  .-(    ).   \033[0m",
+        "\033[38;5;250m (___.__)__)  \033[0m",
+        "             "
+    ],
+    "overcast": [
+        "             ",
+        "\033[38;5;244m     .--.     \033[0m",
+        "\033[38;5;244m  .-(    ).   \033[0m",
+        "\033[38;5;244m (___.__)__)  \033[0m",
+        "             "
+    ],
+    "rain": [
+        "\033[38;5;240m     .-.      \033[0m",
+        "\033[38;5;240m    (   ).    \033[0m",
+        "\033[38;5;240m   (___(__)   \033[0m",
+        "\033[38;5;21m  ʻ ʻ ʻ ʻ ʻ   \033[0m",
+        "\033[38;5;21m ʻ ʻ ʻ ʻ ʻ    \033[0m"
+    ],
+    "heavy rain": [
+        "\033[38;5;240m     .-.      \033[0m",
+        "\033[38;5;240m    (   ).    \033[0m",
+        "\033[38;5;240m   (___(__)   \033[0m",
+        "\033[38;5;27m ‚ʻ‚ʻ‚ʻ‚ʻ‚ʻ   \033[0m",
+        "\033[38;5;27m ‚ʻ‚ʻ‚ʻ‚ʻ‚ʻ   \033[0m"
+    ],
+    "thunderstorm": [
+        "\033[38;5;240m     .-.      \033[0m",
+        "\033[38;5;240m    (   ).    \033[0m",
+        "\033[38;5;240m   (___(__)   \033[0m",
+        "\033[38;5;228;1m  ⚡ʻ⚡ʻ⚡ʻ⚡ʻ⚡   \033[0m",
+        "\033[38;5;27m ‚ʻ‚ʻ‚ʻ‚ʻ‚ʻ    \033[0m"
+    ],
+    "snow": [
+        "\033[38;5;255m     .-.      \033[0m",
+        "\033[38;5;255m    (   ).    \033[0m",
+        "\033[38;5;255m   (___(__)   \033[0m",
+        "\033[38;5;255;m *  *  *  *  \033[m",
+        "             "
+    ],
 }
+
+def color_temp(temp):
+    colmap = [
+        (-15, 21), (-12, 27), (-9, 33), (-6, 39), (-3, 45),
+        (0, 51), (2, 50), (4, 49), (6, 48), (8, 47),
+        (10, 46), (13, 82), (16, 118), (19, 154), (22, 190),
+        (25, 226), (28, 220), (31, 214), (34, 208), (37, 202),
+    ]
+    col = 196
+    for max_temp, color in colmap:
+        if temp < max_temp:
+            col = color
+            break
+    return f"\033[38;5;{col}m{int(temp)}\033[0m"
 
 def draw_weather(weather_condition):
     for condition, icon in weather_icons.items():
@@ -107,58 +116,42 @@ def draw_weather(weather_condition):
             return
     print("Unknown weather condition")
 
+def wind_direction(deg):
+    directions = ["↓", "↙", "←", "↖", "↑", "↗", "→", "↘"]
+    return directions[round(deg % 360 / 45) % 8]
+
 def display_weather_data(weather_data):
-    try:
-            print("----------")
-            print(f"Temperature: {weather_data['current_condition'][0]['temp_C']}°C ({weather_data['current_condition'][0]['temp_F']}°F)")
-            print(f"Weather Condition: {weather_data['current_condition'][0]['weatherDesc'][0]['value']}")
-            draw_weather(weather_data['current_condition'][0]['weatherDesc'][0]['value'])
-            print(f"Humidity: {weather_data['current_condition'][0]['humidity']}%")
-            print(f"Wind Speed: {weather_data['current_condition'][0]['winddir16Point']} {weather_data['current_condition'][0]['windspeedKmph']} km/h ({weather_data['current_condition'][0]['windspeedMiles']} mph)")
-            print(f"Atmospheric Pressure: {weather_data['current_condition'][0]['pressure']} hPa ({weather_data['current_condition'][0]['pressure']} mbar)")
-    except KeyError as e:
-            print(f"Error: Missing key {e}")
-
-    print("\n====================\n")
-
-    print("Forecast:")
-    try:
-        for day in weather_data['weather']:
-            print("----------")
-            print(f"Date: {day['date']}")
-            print(f"Temperature: High = {day['maxtempC']}°C ({day['maxtempF']}°F) | Low = {day['mintempC']}°C ({day['mintempF']}°F)")
-            print(f"Weather Condition: {day['hourly'][0]['weatherDesc'][0]['value']}")
-            draw_weather(day['hourly'][0]['weatherDesc'][0]['value'])
-            print(f"Chance of Precipitation: {day['hourly'][0]['precipMM']} mm")
-    except KeyError as e:
-        print(f"Error: Missing key {e}")
-
-    print("\n====================\n")
-
-    if 'moon_phase' in weather_data:
-        print("Moon Phase:")
-        try:
-            print(f"Moon Age: {weather_data['moon_phase']['ageOfMoon']} days")
-            print(f"Moon Phase: {weather_data['moon_phase']['phaseofMoon']}")
-        except KeyError as e:
-            print(f"Error: Missing key {e}")
-    else:
-        print("Moon Phase: Not available")
+    print(f"Weather for {weather_data['nearest_area'][0]['areaName'][0]['value']}")
     
-    print("\n====================\n")
+    current = weather_data['current_condition'][0]
+    condition = current['weatherDesc'][0]['value'].lower()
+    icon = weather_icons.get(condition, weather_icons['sunny'])
+    
+    print("\nCurrent weather:")
+    print("┌───────────────────────────────┐")
+    for i in range(5):
+        print(f"│ {icon[i]} │")
+    print("├───────────────────────────────┤")
+    print(f"│ Temperature: {color_temp(float(current['temp_C']))}°C ({color_temp(float(current['temp_F']))}°F) │")
+    print(f"│ Wind: {wind_direction(int(current['winddirDegree']))} {color_temp(float(current['windspeedKmph']))} km/h │")
+    print(f"│ Humidity: {current['humidity']}%                │")
+    print(f"│ Visibility: {current['visibility']} km           │")
+    print("└───────────────────────────────┘")
 
-    if 'astronomy' in weather_data:
-        print("Sunrise and Sunset Times:")
-        try:
-            print(f"Sunrise: {weather_data['astronomy'][0]['sunrise']}")
-            print(f"Sunset: {weather_data['astronomy'][0]['sunset']}")
-            print(f"Civil Twilight: {weather_data['astronomy'][0]['civil_twilight_begin']} - {weather_data['astronomy'][0]['civil_twilight_end']}")
-            print(f"Nautical Twilight: {weather_data['astronomy'][0]['nautical_twilight_begin']} - {weather_data['astronomy'][0]['nautical_twilight_end']}")
-            print(f"Astronomical Twilight: {weather_data['astronomy'][0]['astronomical_twilight_begin']} - {weather_data['astronomy'][0]['astronomical_twilight_end']}")
-        except KeyError as e:
-            print(f"Error: Missing key {e}")
-    else:
-        print("Sunrise and Sunset Times: Not available")
+    print("\nForecast:")
+    for day in weather_data['weather']:
+        print(f"\n{day['date']}:")
+        print("┌─────────────┬──────────┬──────────┬──────────┐")
+        print("│   Time      │ Temp     │  Wind    │  Rain    │")
+        print("├─────────────┼──────────┼──────────┼──────────┤")
+        for hour in day['hourly']:
+            time = f"{int(hour['time'])//100:02d}:00"
+            temp = color_temp(float(hour['tempC']))
+            wind = f"{wind_direction(int(hour['winddirDegree']))} {hour['windspeedKmph']}"
+            rain = hour['precipMM']
+            print(f"│ {time:11} │ {temp:8}°C │ {wind:8} │ {rain:7}mm │")
+        print("└─────────────┴──────────┴──────────┴──────────┘")
+
 
 def main():
     ip_address = get_ip_address()
@@ -187,14 +180,11 @@ def main():
 
         display_weather_data(weather_data)
 
-        print("\n====================\n")
-
-        choice = input("Enter 1 to check another location, 2 to exit: ")
+        choice = input("\nEnter 1 to check another location, 2 to exit: ")
         if choice == "1":
             while True:
-                print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
+                print("\n──────────────────────────────────────────────\n")
                 user_defined_location = input("Enter your location (city or zip code): ")
-                print("\n====================\n")
                 try:
                     weather_data = get_weather(user_defined_location)
                     if weather_data is not None:
