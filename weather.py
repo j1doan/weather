@@ -218,6 +218,9 @@ def wind_direction(deg):
     index = round(deg / 22.5) % 16
     return directions[index]
 
+def strip_ansi_codes(text):
+    return re.sub(r'\033\[[0-9;]*m', '', text)
+
 def display_weather_data(weather_data):
     print(f"Weather for {weather_data['nearest_area'][0]['areaName'][0]['value']}")
     
@@ -245,9 +248,13 @@ def display_weather_data(weather_data):
             temp_c = float(hour['tempC'])
             temp_f = (temp_c * 9/5) + 32  # Convert Celsius to Fahrenheit
             temp = f"{color_temp(temp_c)}°C/{color_temp(temp_f)}°F"
+            # Calculate the visible width of the temperature string
+            temp_width = len(strip_ansi_codes(temp))
+            # Adjust the padding to account for the ANSI codes
+            temp_padding = 14 - temp_width  # 14 is the width of the temperature column
             wind = f"{wind_direction(int(hour['winddirDegree']))} {hour['windspeedKmph']}"
             rain = f"{hour['precipMM']} mm"
-            print(f"│ {time:<6} │ {temp:<42} │ {wind:<10} │ {rain:<10} │") # TODO: Adjust dynamic column width for colored temp
+            print(f"│ {time:<6} │ {temp}{' ' * temp_padding} │ {wind:<10} │ {rain:<10} │") # Adjust dynamic column width for colored temp
         print("└────────┴────────────────┴────────────┴────────────┘")
         # print("len(plain_temp) =", len(strip_ansi_codes(temp)), "len(temp) =", len(temp)) # Debugging
 
