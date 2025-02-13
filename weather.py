@@ -231,7 +231,6 @@ def display_weather_data(weather_data):
     print("\nCurrent weather:")
     for line in icon:
         print(f"{line:<50}")
-    print('─'*32)
     print(f"Temperature: {color_temp(float(current['temp_C']))}°C ({color_temp(float(current['temp_F']))}°F)")
     print(f"Wind: {wind_direction(int(current['winddirDegree']))} {color_temp(float(current['windspeedKmph']))} km/h")
     print(f"Humidity: {current['humidity']}%")
@@ -240,22 +239,22 @@ def display_weather_data(weather_data):
     print("\nForecast:")
     for day in weather_data['weather']:
         print(f"\n{day['date']}:")
-        print("┌────────┬────────────────┬────────────┬────────────┐")
-        print("│  Time  │      Temp      │    Wind    │    Rain    │")
-        print("├────────┼────────────────┼────────────┼────────────┤")
+        print("┌────────┬────────────┬────────────┬────────────┐")
+        print("│  Time  │    Temp    │    Wind    │    Rain    │")
+        print("├────────┼────────────┼────────────┼────────────┤")
         for hour in day['hourly']:
             time = f"{int(hour['time'])//100:02d}:00"
             temp_c = float(hour['tempC'])
             temp_f = (temp_c * 9/5) + 32  # Convert Celsius to Fahrenheit
             temp = f"{color_temp(temp_c)}°C/{color_temp(temp_f)}°F"
-            # Calculate the visible width of the temperature string
+            # Calculate visible width of temperature string
             temp_width = len(strip_ansi_codes(temp))
-            # Adjust the padding to account for the ANSI codes
-            temp_padding = 14 - temp_width  # 14 is the width of the temperature column
+            # Adjust padding to account for ANSI codes
+            temp_padding = 10 - temp_width  # 10 is the width of the temperature column
             wind = f"{wind_direction(int(hour['winddirDegree']))} {hour['windspeedKmph']}"
             rain = f"{hour['precipMM']} mm"
             print(f"│ {time:<6} │ {temp}{' ' * temp_padding} │ {wind:<10} │ {rain:<10} │") # Adjust dynamic column width for colored temp
-        print("└────────┴────────────────┴────────────┴────────────┘")
+        print("└────────┴────────────┴────────────┴────────────┘")
         # print("len(plain_temp) =", len(strip_ansi_codes(temp)), "len(temp) =", len(temp)) # Debugging
 
 def main():
@@ -269,39 +268,42 @@ def main():
         print("Failed to get location.")
         return
 
+    print(f"Detected location: {location} (IP: {ip_address})")
+    print("Type '-1' or 'exit' to quit at any time.\n")
+
     user_defined_location = None
 
     while True:
-        if user_defined_location is None:
-            weather_data = get_weather(location)
-            print(f"Current Weather for {location} ({ip_address}):")
-        else:
-            weather_data = get_weather(user_defined_location)
-            print(f"Current Weather for {user_defined_location}:")
-        
-        if weather_data is None:
-            print("Failed to get weather data.")
-            return
+        # Determine the location to query weather for
+        query_location = user_defined_location if user_defined_location else location
+        weather_data = get_weather(query_location)
 
+        if weather_data is None:
+            print(f"Failed to get weather data for {query_location}.")
+            user_defined_location = None  # Reset to default location
+            continue
+
+        # Display weather data
+        if user_defined_location:
+            print(f"\nCurrent Weather for {user_defined_location}:")
+        else:
+            print(f"\nCurrent Weather for {location} ({ip_address}):")
+        
         display_weather_data(weather_data)
 
-        choice = input("\nEnter 1 to check another location, 2 to exit: ")
-        if choice == "1":
-            while True:
-                print(f"\n{'─' * 46}\n") # Query separator
-                user_defined_location = input("Enter your location (city or zip code): ")
-                try:
-                    weather_data = get_weather(user_defined_location)
-                    if weather_data is not None:
-                        break
-                    else:
-                        print("Invalid location. Please try again.")
-                except Exception as e:
-                    print(f"Error: {e}")
-        elif choice == "2":
+        # Prompt for new input
+        user_input = input("\nEnter a new location (city or zip code) or type '-1'/'exit' to quit: ").strip()
+        
+        if user_input.lower() in ["-1", "exit"]:
             break
-        else:
-            print("Invalid choice. Please try again.")
+        
+        # Update the user-defined location
+        if user_input:
+            user_defined_location = user_input
+
+        # Handling for nonsense input
+        if not user_input or not user_input.lower() in ["-1", "exit"]:
+            user_input # Loop back to weather based on ip of machine
 
 if __name__ == "__main__":
     main()
