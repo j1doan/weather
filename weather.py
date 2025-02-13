@@ -12,8 +12,7 @@ if os.name == 'nt':
 
 # Regular expression to match ANSI escape codes
 def strip_ansi_codes(text):
-    ansi_escape = re.compile(r'\x1B\[[0-?9;]*[mK]')
-    return ansi_escape.sub('', text)
+    return re.sub(r'\033\[[0-9;]*m', '', text)
 
 def get_ip_address():
     """Gets the IP address of the machine."""
@@ -217,9 +216,6 @@ def wind_direction(deg):
     ]
     index = round(deg / 22.5) % 16
     return directions[index]
-
-def strip_ansi_codes(text):
-    return re.sub(r'\033\[[0-9;]*m', '', text)
 
 def display_weather_data(weather_data):
     print(f"Weather for {weather_data['nearest_area'][0]['areaName'][0]['value']}")
