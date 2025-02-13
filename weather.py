@@ -1,6 +1,7 @@
 import requests
 import sys
 import os
+import re
 
 # Force UTF-8 encoding for stdout
 sys.stdout.reconfigure(encoding='utf-8')
@@ -8,6 +9,11 @@ sys.stdout.reconfigure(encoding='utf-8')
 # Enable ANSI escape sequence processing on Windows
 if os.name == 'nt':
     os.system('color')
+
+# Regular expression to match ANSI escape codes
+def strip_ansi_codes(text):
+    ansi_escape = re.compile(r'\x1B\[[0-?9;]*[mK]')
+    return ansi_escape.sub('', text)
 
 def get_ip_address():
     """Gets the IP address of the machine."""
@@ -220,36 +226,30 @@ def display_weather_data(weather_data):
     icon = weather_icons.get(condition, weather_icons['sunny'])
     
     print("\nCurrent weather:")
-    print("┌──────────────────────────┐")
     for line in icon:
-        print(f"│ {line:<39} │")
-    print("├──────────────────────────┤")
-    # Ensure the weather data lines are exactly 39 characters long by adding padding
-    temp_line = f"Temperature: {color_temp(float(current['temp_C']))}°C ({color_temp(float(current['temp_F']))}°F)"
-    print(f"│ {temp_line:<37} │")
-    wind_line = f"Wind: {wind_direction(int(current['winddirDegree']))} {color_temp(float(current['windspeedKmph']))} km/h"
-    print(f"│ {wind_line:<37} │")
-    humidity_line = f"Humidity: {current['humidity']}%"
-    print(f"│ {humidity_line:<37} │")
-    visibility_line = f"Visibility: {current['visibility']} km"
-    print(f"│ {visibility_line:<37} │")
-    print("└──────────────────────────┘")
+        print(f"{line:<50}")
+    print('─'*32)
+    print(f"Temperature: {color_temp(float(current['temp_C']))}°C ({color_temp(float(current['temp_F']))}°F)")
+    print(f"Wind: {wind_direction(int(current['winddirDegree']))} {color_temp(float(current['windspeedKmph']))} km/h")
+    print(f"Humidity: {current['humidity']}%")
+    print(f"Visibility: {current['visibility']} km")
 
     print("\nForecast:")
     for day in weather_data['weather']:
         print(f"\n{day['date']}:")
-        print("┌────────┬────────────┬────────────┬────────────┐")
-        print("│  Time  │    Temp    │    Wind    │    Rain    │")
-        print("├────────┼────────────┼────────────┼────────────┤")
+        print("┌────────┬────────────────┬────────────┬────────────┐")
+        print("│  Time  │      Temp      │    Wind    │    Rain    │")
+        print("├────────┼────────────────┼────────────┼────────────┤")
         for hour in day['hourly']:
             time = f"{int(hour['time'])//100:02d}:00"
             temp_c = float(hour['tempC'])
             temp_f = (temp_c * 9/5) + 32  # Convert Celsius to Fahrenheit
             temp = f"{color_temp(temp_c)}°C/{color_temp(temp_f)}°F"
             wind = f"{wind_direction(int(hour['winddirDegree']))} {hour['windspeedKmph']}"
-            rain = hour['precipMM']
-            print(f"│ {time:6} │ {temp:<20} │ {wind:10} │ {rain:10}mm │")
-        print("└────────┴────────────┴────────────┴────────────┘")
+            rain = f"{hour['precipMM']} mm"
+            print(f"│ {time:<6} │ {temp:<42} │ {wind:<10} │ {rain:<10} │") # TODO: Adjust dynamic column width for colored temp
+        print("└────────┴────────────────┴────────────┴────────────┘")
+        # print("len(plain_temp) =", len(strip_ansi_codes(temp)), "len(temp) =", len(temp)) # Debugging
 
 def main():
     ip_address = get_ip_address()
