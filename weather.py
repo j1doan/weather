@@ -265,7 +265,6 @@ def main():
         return
 
     print(f"Detected location: {location} (IP: {ip_address})")
-    print("Type '-1' or 'exit' to quit at any time.\n")
 
     user_defined_location = None
 
@@ -288,18 +287,16 @@ def main():
         display_weather_data(weather_data)
 
         # Prompt for new input
-        user_input = input("\nEnter a new location (city or zip code) or type '-1'/'exit' to quit: ").strip()
-        
-        if user_input.lower() in ["-1", "exit"]:
-            break
-        
-        # Update the user-defined location
-        if user_input:
-            user_defined_location = user_input
+        user_input = input("\nEnter a new location (city or zip code) or press CRTL + C to exit: ").strip()
 
-        # Handling for nonsense input
-        if not user_input or not user_input.lower() in ["-1", "exit"]:
-            user_input # Loop back to weather based on ip of machine
+        while True:
+            try:
+                if user_input: # Update the user-defined location
+                    user_defined_location = user_input
+                else: # Handling for nonsense input
+                    user_input # Loop back to weather based on ip of machine
+            except KeyboardInterrupt: # Ctrl + C
+                break
 
 if __name__ == "__main__":
     main()
